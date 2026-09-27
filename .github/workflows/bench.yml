@@ -20,3 +20,36 @@ jobs:
           name: durations
           path: .test-durations.json
           include-hidden-files: true           # the file name starts with "."
+
+  naive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install -e ".[default,test]"
+      - run: pip install git+https://github.com/ashmeenkhaira/test-splitter
+      - run: rm .test-durations.json                 # no timings -> split by count
+      - run: pytest --doctest-modules --durations=10 --runslow --pyargs networkx --shard ${{ matrix.shard }} --num-shards 4
+
+  timesplit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install -e ".[default,test]"
+      - run: pip install git+https://github.com/ashmeenkhaira/test-splitter
+      - run: pytest --doctest-modules --durations=10 --runslow --pyargs networkx --shard ${{ matrix.shard }} --num-shards 4
