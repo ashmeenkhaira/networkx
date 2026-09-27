@@ -1,0 +1,22 @@
+name: bench
+
+on: [push]
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60                        # safety stop if something hangs
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install -e ".[default,test]"  # networkx + numpy/scipy/pandas/matplotlib + pytest
+      - run: pip install git+https://github.com/ashmeenkhaira/test-splitter
+      - run: pytest --doctest-modules --durations=10 --runslow --pyargs networkx
+      - uses: actions/upload-artifact@v7
+        if: always()                           # upload even if some tests fail
+        with:
+          name: durations
+          path: .test-durations.json
+          include-hidden-files: true           # the file name starts with "."
